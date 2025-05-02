@@ -1,0 +1,530 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ page_title }}</h2>
+    <hr>
+
+    <!-- Display messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Batch Upload Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <strong>Bulk PDF Upload (Auto-Scan and Save)</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data" id="batch-upload-form">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="session" class="form-label">Select Batch (Session)</label>
+                        <select name="session" id="session" class="form-control" required>
+                            <option value="">-- Select Batch --</option>
+                            {% for session in sessions %}
+                                <option value="{{ session.id }}">{{ session }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="pdf_file" class="form-label">Upload PDF File</label>
+                        <input type="file" name="pdf_file" id="pdf_file" class="form-control" accept=".pdf" required>
+                        <small class="text-muted">PDF should contain roll number, name, and subject-wise marks.</small>
+                    </div>
+                </div>
+                <button type="submit" name="bulk_upload" class="btn btn-primary">Upload & Save Results</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manual Entry Section -->
+    <div class="card">
+        <div class="card-header">
+            <strong>Manual Entry</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="manual-entry-form">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="session_manual" class="form-label">Select Batch</label>
+                        <select name="session" id="session_manual" class="form-control" required>
+                            <option value="">-- Select Batch --</option>
+                            {% for session in sessions %}
+                                <option value="{{ session.id }}">{{ session }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="subject_manual" class="form-label">Select Subject</label>
+                        <select name="subject" id="subject_manual" class="form-control" required>
+                            <option value="">-- Select Subject --</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="student_list" class="form-label">Select Student</label>
+                        <select name="student_list" id="student_list" class="form-control" required>
+                            <option value="">-- Select Student --</option>
+                            <!-- To be dynamically loaded via JS -->
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label for="test" class="form-label">Test</label>
+                        <input type="number" name="test" id="test" class="form-control" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-1">
+                        <label for="exam" class="form-label">Exam</label>
+                        <input type="number" name="exam" id="exam" class="form-control" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JS for dynamic student dropdown -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function loadStudents() {
+            var sessionId = document.getElementById('session_manual').value;
+            var subjectId = document.getElementById('subject_manual').value;
+            var studentSelect = document.getElementById('student_list');
+            studentSelect.innerHTML = '<option value="">Loading...</option>';
+            if (sessionId && subjectId) {
+                fetch("{% url 'get_students' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: "session=" + sessionId + "&subject=" + subjectId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    var students = JSON.parse(data);
+                    studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+                    students.forEach(function(student) {
+                        studentSelect.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+                    });
+                });
+            } else {
+                studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+            }
+        }
+        document.getElementById('session_manual').addEventListener('change', loadStudents);
+        document.getElementById('subject_manual').addEventListener('change', loadStudents);
+    });
+</script>
+{% endblock %}
+
+
+
+
+
+{% comment %} {% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ page_title }}</h2>
+    <hr>
+
+    <!-- Display messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Batch Upload Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <strong>Batch PDF/CSV Upload</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data" id="batch-upload-form">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="session" class="form-label">Select Batch</label>
+                        <select name="session" id="session" class="form-control" required>
+                            <option value="">-- Select Batch --</option>
+                            {% for session in sessions %}
+                                <option value="{{ session.id }}">{{ session }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="subject" class="form-label">Select Subject</label>
+                        <select name="subject" id="subject" class="form-control" required>
+                            <option value="">-- Select Subject --</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="result_file" class="form-label">Upload PDF or CSV</label>
+                        <input type="file" name="result_file" id="result_file" class="form-control" accept=".pdf,.csv" required>
+                        <small class="text-muted">
+                            PDF must contain student name/roll and subject marks.<br>
+                            CSV columns: roll_number, subject, marks
+                        </small>
+                    </div>
+                </div>
+                <button type="submit" name="batch_upload" class="btn btn-primary">Upload &amp; Preview</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manual Entry Section -->
+    <div class="card">
+        <div class="card-header">
+            <strong>Manual Entry</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="manual-entry-form">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="session_manual" class="form-label">Select Batch</label>
+                        <select name="session" id="session_manual" class="form-control" required>
+                            <option value="">-- Select Batch --</option>
+                            {% for session in sessions %}
+                                <option value="{{ session.id }}">{{ session }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="subject_manual" class="form-label">Select Subject</label>
+                        <select name="subject" id="subject_manual" class="form-control" required>
+                            <option value="">-- Select Subject --</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="student_list" class="form-label">Select Student</label>
+                        <select name="student_list" id="student_list" class="form-control" required>
+                            <option value="">-- Select Student --</option>
+                            <!-- To be dynamically loaded via JS/Ajax based on batch selection -->
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label for="test" class="form-label">Test</label>
+                        <input type="number" name="test" id="test" class="form-control" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-1">
+                        <label for="exam" class="form-label">Exam</label>
+                        <input type="number" name="exam" id="exam" class="form-control" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: JS for dynamic student dropdown -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function loadStudents() {
+            var sessionId = document.getElementById('session_manual').value;
+            var subjectId = document.getElementById('subject_manual').value;
+            var studentSelect = document.getElementById('student_list');
+            studentSelect.innerHTML = '<option value="">Loading...</option>';
+            if (sessionId && subjectId) {
+                fetch("{% url 'get_students' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: "session=" + sessionId + "&subject=" + subjectId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    var students = JSON.parse(data);
+                    studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+                    students.forEach(function(student) {
+                        studentSelect.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+                    });
+                });
+            } else {
+                studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+            }
+        }
+        document.getElementById('session_manual').addEventListener('change', loadStudents);
+        document.getElementById('subject_manual').addEventListener('change', loadStudents);
+    });
+</script>
+{% endblock %}
+ {% endcomment %}
+
+
+
+{% comment %} 
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">{{page_title}}</h3>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- File Upload Section -->
+                            <div class="form-group">
+                                <label>Upload Results (Excel/PDF)</label>
+                                <input type="file" name="result_file" accept=".xlsx,.xls,.pdf" class="form-control">
+                                <small class="text-muted">Excel format: Student Name, Test Marks, Exam Marks</small>
+                            </div>
+
+                            <hr>
+                            
+                            <!-- Manual Entry Section -->
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select name="subject" class="form-control" id='subject'>
+                                    <option value="">----</option>
+                                    {% for subject in subjects  %}
+                                    <option value="{{subject.id}}">{{subject.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Session Year</label>
+                                <select name="session" id='session' class="form-control">
+                                    <option value="">----</option>
+                                    {% for session in sessions  %}
+                                    <option value="{{session.id}}">{{session}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <!-- File Upload Submit -->
+                            <button type="submit" name="upload_file" class="btn btn-info mb-2">
+                                <i class="fas fa-upload"></i> Upload File
+                            </button>
+                            
+                            <hr>
+                            
+                            <!-- Manual Entry Controls -->
+                            <button type="button" id='fetch_student' class="btn btn-primary">
+                                <i class="fas fa-users"></i> Fetch Students
+                            </button>
+                            
+                            <div class="form-group mt-3" id="student_data">
+                                <!-- Dynamically injected student form -->
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+        $("#fetch_student").click(function () {
+            var subject = $("#subject").val()
+            var session = $("#session").val()
+            $("#student_data").html('')
+            
+            if (subject.length == 0 || session.length == 0) {
+                alert("Please select session and subject");
+                return false;
+            }
+
+            $.ajax({
+                url: "{% url 'get_students' %}",
+                type: 'POST',
+                data: {
+                    subject: subject,
+                    session: session
+                }
+            }).done(function (response) {
+                var json_data = JSON.parse(response)
+                if (json_data.length < 1) {
+                    alert("No students found for selected criteria")
+                } else {
+                    var formContent = `
+                        <hr>
+                        <div class='form-group'>
+                            <label>Student List</label>
+                            <select class='student_list form-control' name='student_list'>
+                                ${json_data.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class='form-group row'>
+                            <div class='col-md-6'>
+                                <label>Test Score</label>
+                                <input class='form-control' name='test' placeholder='0-40' min='0' max='40' required type='number' />
+                            </div>
+                            <div class='col-md-6'>
+                                <label>Exam Score</label>
+                                <input class='form-control' name='exam' placeholder='0-60' min='0' max='60' required type='number' />
+                            </div>
+                        </div>
+                        <button type="submit" name="save_manual" class="btn btn-success">
+                            <i class="fas fa-save"></i> Save Manual Entry
+                        </button>
+                    `;
+                    $("#student_data").html(formContent)
+                }
+            }).fail(function (response) {
+                alert("Error fetching students")
+            })
+        })
+    })
+</script>
+{% endblock custom_js %}
+ {% endcomment %}
+
+
+{% comment %} {% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                    <form method="POST">
+                        {% csrf_token %}
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+
+       
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+
+
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select name="subject" class="form-control" id='subject'>
+                                <option value="">----</option>
+                                {% for subject in subjects  %}
+                                <option value="{{subject.id}}">{{subject.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label>Session Year</label>
+                            <select name="session" id='session' class="form-control">
+                                <option value="">----</option>
+                                {% for session in sessions  %}
+                                <option value="{{session.id}}">{{session}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="button" id='fetch_student' class="btn btn-primary btn-block">Fetch
+                            Students</button>
+                        <div class="form-group" id="student_data">
+
+                        </div>
+                    </div>
+                </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+
+       
+        $("#fetch_student").click(function () {
+            var subject = $("#subject").val()
+            var session = $("#session").val()
+            $("#student_data").html(null)
+if (subject.length  == 0 || session.length == 0){
+    alert("Please select session and subject");
+    return false;
+}
+            $.ajax({
+                url: "{% url 'get_students' %}",
+                type: 'POST',
+                data: {
+                    subject: subject,
+                    session: session
+                }
+            }).done(function (response) {
+                var json_data = JSON.parse(response)
+                if (json_data.length < 1) {
+                    alert("No data to display")
+                } else {
+                    var div_data = "<hr/><div class='form-group'> <label> Student List</label> <select class='student_list form-control' name='student_list'> "
+
+                    for (key in json_data) {
+                        div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + " </option>"
+                    }
+                    div_data += "</select></div>"
+                    div_data += "<div class='form-group row'> <div class='col-md-6'> <label> Test Score </label> <input class='form-control' name='test' placeholder='Test Score' max='40' min='0' required type='number' /></div><div class='col-md-6'><label> Exam Score </label>  <input class='form-control' placeholder='Exam Score'  name='exam' max='60' min='0' required type='number' /> </div></div><div class='form-group'><button id='save_attendance' class='btn btn-success' type='submit'>Save Result</button></div></div>"
+                    $("#student_data").html(div_data)
+                }
+            }).fail(function (response) {
+                alert("Error in fetching students")
+            })
+
+
+
+
+        })
+    })
+</script>
+{% endblock custom_js %} {% endcomment %}
