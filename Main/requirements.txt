@@ -8,7 +8,7 @@ certifi
 chardet
 charset-normalizer
 click
-Django
+django
 django-channels
 frozenlist
 gunicorn
