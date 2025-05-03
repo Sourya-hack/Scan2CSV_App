@@ -11,6 +11,7 @@ click==8.1.8
 Django==5.2
 django-channels==0.7.0
 frozenlist==1.6.0
+gunicorn==21.2.0
 idna==3.10
 multidict==6.4.3
 numpy==2.2.5
@@ -35,3 +36,4 @@ twilio==9.5.2
 tzdata==2025.2
 urllib3==2.4.0
 yarl==1.20.0
+whitenoise==6.6.0
