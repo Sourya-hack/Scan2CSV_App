@@ -2,10 +2,14 @@ services:
   - type: web
     name: scan2csv
     env: python
+<<<<<<< HEAD
     buildCommand: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
+=======
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+>>>>>>> a30083bf2c4a13482ba8366b9cc4b156d1987035
     startCommand: gunicorn student_management_system.wsgi:application
     envVars:
       - key: PYTHON_VERSION
@@ -16,5 +20,8 @@ services:
         generateValue: true
       - key: WEB_CONCURRENCY
         value: 4
+<<<<<<< HEAD
       - key: PYTHONPATH
         value: /opt/render/project/src 
+=======
+>>>>>>> a30083bf2c4a13482ba8366b9cc4b156d1987035
