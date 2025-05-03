@@ -16,12 +16,13 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('MY_SECRET_KEY', 'insecure-dev-key')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'insecure-dev-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']  # For local development
+# Get allowed hosts from environment variable or use default
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'scan2csv.onrender.com,localhost,127.0.0.1').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -36,16 +37,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    # Optional: For static file support in production
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',
-
     'main_app.middleware.LoginCheckMiddleWare',
 ]
 
@@ -109,6 +107,9 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Enable WhiteNoise for static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Custom user model
 AUTH_USER_MODEL = 'main_app.CustomUser'
 AUTHENTICATION_BACKENDS = ['main_app.EmailBackend.EmailBackend']
@@ -120,6 +121,3 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL_ADDRESS', 'test@example.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', 'yourpassword')
 EMAIL_USE_TLS = True
-
-# Optional: Enable in production
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
