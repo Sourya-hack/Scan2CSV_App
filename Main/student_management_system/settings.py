@@ -16,13 +16,13 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'insecure-dev-key')
+SECRET_KEY = os.environ.get('MY_SECRET_KEY', 'insecure-dev-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = 'True'
 
 # Get allowed hosts from environment variable or use default
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'scan2csv.onrender.com,localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS =  ['*'] 
 
 # Application definition
 INSTALLED_APPS = [
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+   'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
